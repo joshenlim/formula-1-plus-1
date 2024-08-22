@@ -35,6 +35,11 @@ import { useParams, useRouter } from "next/navigation";
 import { useState } from "react";
 import { toast } from "sonner";
 
+const modes = [
+  { symbol: "⏱️", key: "Time based", value: "time-based" },
+  { symbol: "🚗", key: "Fastest first", value: "fastest-first" },
+];
+
 const digits = [
   { symbol: "1", key: "1 digit", value: 1 },
   { symbol: "10", key: "2 digits", value: 2 },
@@ -61,6 +66,12 @@ export default function SettingsBar() {
   const { room, players, isRoomOwner, isLoading } = useRoomInformation(
     id as string
   );
+
+  const onUpdateMode = async (value: string) => {
+    if (value && room !== undefined && isRoomOwner) {
+      await supabase.from("rooms").update({ mode: value }).eq("id", id);
+    }
+  };
 
   const onUpdateDigits = async (value: string) => {
     if (value) {
@@ -96,8 +107,12 @@ export default function SettingsBar() {
     if (id === undefined) {
       const { data } = await supabase.from("rooms").select("id").limit(10);
       if (data) {
-        const randomRoom = data[Math.floor(Math.random() * data.length)];
-        if (randomRoom) router.push(`/${randomRoom.id}`);
+        if (data.length === 0) {
+          toast.info("There are no rooms available to join!");
+        } else {
+          const randomRoom = data[Math.floor(Math.random() * data.length)];
+          if (randomRoom) router.push(`/${randomRoom.id}`);
+        }
       }
     } else {
       const { data } = await supabase
@@ -169,76 +184,128 @@ export default function SettingsBar() {
         </div>
       ) : (
         <>
-          <div className="rounded-full bg-zinc-900 w-full py-2 px-2 grid grid-cols-3 divide-x">
-            <ToggleGroup
-              type="single"
-              className="flex items-center justify-center gap-x-4"
-              value={String(store.digits)}
-              onValueChange={onUpdateDigits}
+          <div
+            className={cn(
+              "rounded-full bg-zinc-900 w-full py-2 px-2 grid divide-x grid-cols-3"
+            )}
+          >
+            <div
+              className={cn(
+                "grid divide-x col-span-2",
+                id !== undefined ? "grid-cols-8" : "grid-cols-2"
+              )}
             >
-              {digits.map((digit) => {
-                return (
-                  <Tooltip key={digit.key} delayDuration={0}>
-                    <TooltipTrigger asChild>
-                      <ToggleGroupItem
-                        size="sm"
-                        key={digit.key}
-                        aria-label={digit.key}
-                        value={String(digit.value)}
-                        className={cn(
-                          "w-6 h-6 text-xs text-zinc-500",
-                          "hover:text-zinc-200 hover:bg-transparent",
-                          "aria-[checked=true]:bg-transparent aria-[checked=true]:text-green-500"
-                        )}
+              {id !== undefined && (
+                <ToggleGroup
+                  type="single"
+                  className="flex items-center justify-center gap-x-4 col-span-2"
+                  value={store.mode}
+                  onValueChange={onUpdateMode}
+                >
+                  {modes.map((mode) => {
+                    return (
+                      <Tooltip key={mode.key} delayDuration={0}>
+                        <TooltipTrigger asChild>
+                          <ToggleGroupItem
+                            size="sm"
+                            key={mode.key}
+                            aria-label={mode.key}
+                            value={String(mode.value)}
+                            className={cn(
+                              "w-6 h-6 text-xs text-zinc-500 transition",
+                              "hover:opacity-80 hover:bg-transparent opacity-30",
+                              "aria-[checked=true]:bg-transparent aria-[checked=true]:opacity-100"
+                            )}
+                          >
+                            {mode.symbol}
+                          </ToggleGroupItem>
+                        </TooltipTrigger>
+                        <TooltipContent
+                          side="bottom"
+                          className="bg-zinc-800 text-zinc-200"
+                        >
+                          <p>{mode.key}</p>
+                        </TooltipContent>
+                      </Tooltip>
+                    );
+                  })}
+                </ToggleGroup>
+              )}
+              <ToggleGroup
+                type="single"
+                className={cn(
+                  "flex items-center justify-center gap-x-4",
+                  id !== undefined ? "col-span-3" : ""
+                )}
+                value={String(store.digits)}
+                onValueChange={onUpdateDigits}
+              >
+                {digits.map((digit) => {
+                  return (
+                    <Tooltip key={digit.key} delayDuration={0}>
+                      <TooltipTrigger asChild>
+                        <ToggleGroupItem
+                          size="sm"
+                          key={digit.key}
+                          aria-label={digit.key}
+                          value={String(digit.value)}
+                          className={cn(
+                            "w-6 h-6 text-xs text-zinc-500",
+                            "hover:text-zinc-200 hover:bg-transparent",
+                            "aria-[checked=true]:bg-transparent aria-[checked=true]:text-green-500"
+                          )}
+                        >
+                          {digit.symbol}
+                        </ToggleGroupItem>
+                      </TooltipTrigger>
+                      <TooltipContent
+                        side="bottom"
+                        className="bg-zinc-800 text-zinc-200"
                       >
-                        {digit.symbol}
-                      </ToggleGroupItem>
-                    </TooltipTrigger>
-                    <TooltipContent
-                      side="bottom"
-                      className="bg-zinc-800 text-zinc-200"
-                    >
-                      <p>{digit.key}</p>
-                    </TooltipContent>
-                  </Tooltip>
-                );
-              })}
-            </ToggleGroup>
-
-            <ToggleGroup
-              type="multiple"
-              className="flex items-center justify-center gap-x-3"
-              value={store.operators as string[]}
-              onValueChange={onUpdateOperators}
-            >
-              {operators.map((op) => {
-                return (
-                  <Tooltip key={op.key} delayDuration={0}>
-                    <TooltipTrigger asChild>
-                      <ToggleGroupItem
-                        size="sm"
-                        key={op.key}
-                        aria-label={op.key}
-                        value={op.value}
-                        className={cn(
-                          "w-6 h-6 text-lg text-zinc-500",
-                          "hover:text-zinc-200 hover:bg-transparent",
-                          "aria-[pressed=true]:bg-transparent aria-[pressed=true]:text-green-500"
-                        )}
+                        <p>{digit.key}</p>
+                      </TooltipContent>
+                    </Tooltip>
+                  );
+                })}
+              </ToggleGroup>
+              <ToggleGroup
+                type="multiple"
+                className={cn(
+                  "flex items-center justify-center gap-x-3",
+                  id !== undefined ? "col-span-3" : ""
+                )}
+                value={store.operators as string[]}
+                onValueChange={onUpdateOperators}
+              >
+                {operators.map((op) => {
+                  return (
+                    <Tooltip key={op.key} delayDuration={0}>
+                      <TooltipTrigger asChild>
+                        <ToggleGroupItem
+                          size="sm"
+                          key={op.key}
+                          aria-label={op.key}
+                          value={op.value}
+                          className={cn(
+                            "w-6 h-6 text-lg text-zinc-500",
+                            "hover:text-zinc-200 hover:bg-transparent",
+                            "aria-[pressed=true]:bg-transparent aria-[pressed=true]:text-green-500"
+                          )}
+                        >
+                          {op.symbol}
+                        </ToggleGroupItem>
+                      </TooltipTrigger>
+                      <TooltipContent
+                        side="bottom"
+                        className="bg-zinc-800 text-zinc-200"
                       >
-                        {op.symbol}
-                      </ToggleGroupItem>
-                    </TooltipTrigger>
-                    <TooltipContent
-                      side="bottom"
-                      className="bg-zinc-800 text-zinc-200"
-                    >
-                      <p>Toggle {op.key}</p>
-                    </TooltipContent>
-                  </Tooltip>
-                );
-              })}
-            </ToggleGroup>
+                        <p>Toggle {op.key}</p>
+                      </TooltipContent>
+                    </Tooltip>
+                  );
+                })}
+              </ToggleGroup>
+            </div>
 
             <div className="flex items-center justify-center gap-x-2">
               {!user ? (

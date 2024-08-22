@@ -77,7 +77,13 @@ export default function Entry() {
       )}
     >
       <p className="flex flex-col gap-y-1 items-center">
-        <span>Formula 1+1 🏎️ 🧮</span>
+        <span>
+          {id === undefined
+            ? "Formula 1+1 🏎️ 🧮"
+            : `Mode: ${
+                store.mode === "time-based" ? "Time Based" : "Fastest First"
+              }`}
+        </span>
         {id !== undefined && (
           <span className="text-xs text-zinc-500 font-mono">
             Room ID:{" "}

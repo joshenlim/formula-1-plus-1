@@ -115,10 +115,11 @@ export const useRoomInformation = (id: string) => {
         toast("This room does not exist")
         router.push("/")
       } else {
-        const { configuration } = roomInformation
+        const { configuration, mode } = roomInformation
         setInitialized(true)
   
         setTimeout(() => {
+          store.setMode(mode)
           store.setDigits(configuration.digits)
           store.setOperators(configuration.operators)
         }, 10)

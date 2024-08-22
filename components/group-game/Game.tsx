@@ -1,15 +1,18 @@
 "use client";
 
 import { Input } from "@/components/ui/input";
-import { useTimer } from "@/lib/hooks";
+import { FASTEST_FIRST_MAX_QUESTIONS } from "@/lib/constants";
+import { useRoomInformation, useTimer } from "@/lib/hooks";
 import { Operator, useStoreSnapshot } from "@/lib/store";
 import { GameResults, OpMistakes, Question } from "@/lib/types";
 import { cn, getOpSymbol } from "@/lib/utils";
+import { useParams } from "next/navigation";
 import { useEffect, useState } from "react";
 
 interface GameProps {
   questions: Question[];
   questionIdx: number;
+  playerPositions: { [key: string]: number };
   onSubmitAnswer: (isCorrect: boolean) => void;
   onComplete: (results: GameResults) => void;
 }
@@ -17,10 +20,13 @@ interface GameProps {
 export default function Game({
   questions,
   questionIdx,
+  playerPositions,
   onSubmitAnswer,
   onComplete,
 }: GameProps) {
+  const { id } = useParams();
   const store = useStoreSnapshot();
+  const { players } = useRoomInformation(id as string);
   const { elapsedTime, handleStart, handleReset } = useTimer();
   const { elapsedTime: elapsedTimeGame, handleStart: handleStartGame } =
     useTimer();
@@ -111,7 +117,7 @@ export default function Game({
   return (
     <div
       className={cn(
-        "transition",
+        "transition relative",
         store.status === "idle" ? "opacity-0" : "opacity-100"
       )}
     >
@@ -133,7 +139,9 @@ export default function Game({
           </code>
           <div className="flex flex-col items-center">
             <p className="text-sm text-zinc-600">
-              As many as possible, within {store.duration / 1000} seconds
+              {store.mode === "time-based"
+                ? `As many as possible, within ${store.duration / 1000} seconds`
+                : `Complete ${FASTEST_FIRST_MAX_QUESTIONS} questions as fast as you can, only the first one wins`}
             </p>
             {store.operators.includes("divide") && (
               <p className="text-sm text-zinc-600">
@@ -195,6 +203,35 @@ export default function Game({
               <code className="text-red-500">{wrong}</code>
             </div>
           </div>
+        </div>
+      )}
+
+      {store.mode === "fastest-first" && countdown === 0 && (
+        <div className="absolute -left-[12rem] -bottom-20 flex flex-col gap-y-2">
+          {Object.entries(playerPositions).map(([id, pos]) => {
+            const player = players.find((p: any) => p.player_id === id);
+            return (
+              <div
+                key={`pos-${id}`}
+                className="min-w-[600px] grid grid-cols-4 flex items-center gap-x-2"
+              >
+                <p className="text-right text-sm">{player.profiles.username}</p>
+                <div className="relative col-span-3 h-1 rounded-full border">
+                  <p
+                    className="absolute text-3xl -top-[24px] transition"
+                    style={{
+                      transform: `scaleX(-1) translateX(-${
+                        pos * (415 / FASTEST_FIRST_MAX_QUESTIONS)
+                      }px)`,
+                    }}
+                  >
+                    🏎️
+                  </p>
+                  <p className="absolute -right-5 -top-[11px]">{pos}</p>
+                </div>
+              </div>
+            );
+          })}
         </div>
       )}
     </div>

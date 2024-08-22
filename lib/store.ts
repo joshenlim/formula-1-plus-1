@@ -4,10 +4,12 @@ export type Operator = 'add' | 'subtract' | 'multiply' | 'divide'
 export const store = proxy({
   status: 'idle' as 'idle' | 'start' | 'end',
   duration: 30000,
+  mode: 'time-based' as 'time-based' | 'fastest-first',
   digits: 2 as number,
   operators: ['add'] as Operator[],
 
   setStatus: (value: 'idle' | 'start' | 'end') => store.status = value,
+  setMode: (value: 'time-based' | 'fastest-first') => store.mode = value,
   setDigits: (value: number) => store.digits = value,
   setOperators: (values: Operator[]) => store.operators = values,
 

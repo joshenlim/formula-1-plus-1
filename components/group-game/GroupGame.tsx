@@ -1,6 +1,6 @@
 "use client";
 
-import { BROADCAST_EVENTS } from "@/lib/constants";
+import { BROADCAST_EVENTS, FASTEST_FIRST_MAX_QUESTIONS } from "@/lib/constants";
 import { usePrevious, useRoomInformation, useUserProfile } from "@/lib/hooks";
 import { Operator, useStoreSnapshot } from "@/lib/store";
 import { GameResults } from "@/lib/types";
@@ -31,12 +31,18 @@ export default function GroupGame({ user }: GroupGameProps) {
   const [results, setResults] = useState<GameResults>();
   const [view, setView] = useState<"entry" | "game" | "results">("entry");
 
+  // Only for fastest first game mode
+  const [playerPositions, setPlayerPositions] = useState<{
+    [key: string]: number;
+  }>({});
+  const [incomingUpdate, setIncomingUpdate] = useState<any>();
+
   const [questionIdx, setQuestionIdx] = useState(0);
   const [questions, setQuestions] = useState<
     { number1: number; number2: number; operator: string }[]
   >([]);
 
-  const { players, refetch, isRoomOwner, isReady, isEveryoneReady, isSuccess } =
+  const { players, refetch, isRoomOwner, isReady, isEveryoneReady } =
     useRoomInformation(id as string);
   const prevPlayers = usePrevious(players);
 
@@ -55,7 +61,7 @@ export default function GroupGame({ user }: GroupGameProps) {
       await supabase.from("games").insert({
         player: user.id,
         type: "public",
-        mode: "time-based",
+        mode: store.mode,
         configuration: {
           digits: store.digits,
           operators: store.operators,
@@ -71,7 +77,7 @@ export default function GroupGame({ user }: GroupGameProps) {
       if (code === "Space") {
         if (isRoomOwner && isEveryoneReady) {
           const questions = generateQuestionSet({
-            qty: 50,
+            qty: store.mode === "time-based" ? 50 : FASTEST_FIRST_MAX_QUESTIONS,
             digits: store.digits,
             operators: store.operators as Operator[],
           });
@@ -122,34 +128,70 @@ export default function GroupGame({ user }: GroupGameProps) {
       isRoomOwner,
       isEveryoneReady,
       isReady,
+      store.status,
+      store.mode,
       store.digits,
       store.operators,
       roomChannel,
     ]
   );
 
-  const onSubmitAnswer = (isCorrect: boolean) => {
+  const onSubmitAnswer = async (isCorrect: boolean) => {
     if (!roomChannel) return;
 
-    if (isCorrect) {
-      roomChannel.send({
-        type: "broadcast",
-        event: BROADCAST_EVENTS.CORRECT_ANSWER,
-        payload: {
-          user: profile.username,
-        },
-      });
-      setQuestionIdx((prev) => prev + 1);
+    if (store.mode === "time-based") {
+      if (isCorrect) {
+        roomChannel.send({
+          type: "broadcast",
+          event: BROADCAST_EVENTS.CORRECT_ANSWER,
+          payload: {
+            user: profile.username,
+          },
+        });
+        setQuestionIdx((prev) => prev + 1);
+      } else {
+        roomChannel.send({
+          type: "broadcast",
+          event: BROADCAST_EVENTS.WRONG_ANSWER,
+          payload: {
+            user: profile.username,
+          },
+        });
+      }
     } else {
-      roomChannel.send({
-        type: "broadcast",
-        event: BROADCAST_EVENTS.WRONG_ANSWER,
-        payload: {
-          user: profile.username,
-        },
-      });
+      if (isCorrect) {
+        roomChannel.send({
+          type: "broadcast",
+          event: BROADCAST_EVENTS.NEXT_QUESTION,
+          payload: {
+            id: profile.id,
+            user: profile.username,
+            questionIdx: questionIdx + 1,
+          },
+        });
+        const updatedPlayerPositions = {
+          ...playerPositions,
+          [profile.id]: questionIdx + 1,
+        };
+        setPlayerPositions(updatedPlayerPositions);
+
+        if (questionIdx === FASTEST_FIRST_MAX_QUESTIONS - 1) {
+          await supabase.from("rooms").update({ status: "ended" }).eq("id", id);
+        } else {
+          setQuestionIdx((prev) => prev + 1);
+        }
+      }
     }
   };
+
+  useEffect(() => {
+    if (store.status === "start" && store.mode === "fastest-first") {
+      const initialPlayerPositions = players.reduce((a: any, b: any) => {
+        return { ...a, [b.player_id]: 0 };
+      }, {});
+      setPlayerPositions(initialPlayerPositions);
+    }
+  }, [store.status, store.mode]);
 
   useEffect(() => {
     if (id && user) {
@@ -187,14 +229,35 @@ export default function GroupGame({ user }: GroupGameProps) {
           "postgres_changes",
           { event: "UPDATE", schema: "public", table: "rooms" },
           async (payload) => {
-            const { configuration, status } = payload.new;
+            const { configuration, status, mode } = payload.new;
             if (status === "open") {
               store.setDigits(configuration.digits);
               store.setOperators(configuration.operators);
+              store.setMode(mode);
             } else if (status === "progress") {
               startNewGameSession();
             } else if (status === "ended") {
               store.setStatus("end");
+              var defaults = {
+                spread: 360,
+                ticks: 50,
+                gravity: 0,
+                decay: 0.94,
+                startVelocity: 30,
+                colors: ["FFE400", "FFBD00", "E89400", "FFCA6C", "FDFFB8"],
+              };
+              confetti({
+                ...defaults,
+                particleCount: 40,
+                scalar: 1.2,
+                shapes: ["star"],
+              });
+              confetti({
+                ...defaults,
+                particleCount: 10,
+                scalar: 0.75,
+                shapes: ["circle"],
+              });
             }
             refetch();
           }
@@ -249,6 +312,32 @@ export default function GroupGame({ user }: GroupGameProps) {
           setTimeout(() => setView("entry"), 100);
           toast.info("The room owner has reset the game for everyone");
         })
+        .on(
+          "broadcast",
+          { event: BROADCAST_EVENTS.NEXT_QUESTION },
+          ({ payload }) => {
+            if (payload.questionIdx === FASTEST_FIRST_MAX_QUESTIONS / 2 - 1) {
+              confetti({
+                spread: 360,
+                ticks: 50,
+                gravity: 0,
+                decay: 0.94,
+                startVelocity: 30,
+                origin: { y: 0.95 },
+                particleCount: randomInRange(50, 100),
+                scalar: 1.2,
+                shapes: ["star"],
+              });
+              toast.message(`${payload.user} has reached the midpoint!`, {
+                description:
+                  payload.questionIdx > questionIdx
+                    ? "Keep it up! You can still make it!"
+                    : "Keep pushing and leave them behind!",
+              });
+            }
+            setIncomingUpdate(payload);
+          }
+        )
         .subscribe();
     }
   }, [roomChannel]);
@@ -264,6 +353,8 @@ export default function GroupGame({ user }: GroupGameProps) {
     user,
     isEveryoneReady,
     isReady,
+    store.status,
+    store.mode,
     store.digits,
     store.operators,
     roomChannel,
@@ -294,6 +385,17 @@ export default function GroupGame({ user }: GroupGameProps) {
     }
   }, [players.length]);
 
+  // [Joshen] This isn't the best way to do it, but just doing like this for now as it works
+  useEffect(() => {
+    if (incomingUpdate !== undefined) {
+      const updatedPlayerPositions = {
+        ...playerPositions,
+        [incomingUpdate.id]: incomingUpdate.questionIdx,
+      };
+      setPlayerPositions(updatedPlayerPositions);
+    }
+  }, [incomingUpdate]);
+
   return (
     <main className="flex-1 flex flex-col gap-y-10 items-center justify-center">
       {view === "entry" ? (
@@ -302,11 +404,12 @@ export default function GroupGame({ user }: GroupGameProps) {
         <Game
           questions={questions}
           questionIdx={questionIdx}
+          playerPositions={playerPositions}
           onSubmitAnswer={onSubmitAnswer}
           onComplete={onCompleteGame}
         />
       ) : results !== undefined ? (
-        <Results results={results} />
+        <Results results={results} playerPositions={playerPositions} />
       ) : null}
     </main>
   );

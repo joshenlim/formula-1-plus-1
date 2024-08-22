@@ -110,7 +110,7 @@ export default async function ProtectedPage() {
                       <p className="font-mono text-xs text-zinc-500 capitalize">
                         {game.type} game ({game.mode})
                       </p>
-                      <p className="font-mono text-xs">
+                      <p className="font-mono text-xs text-zinc-500">
                         Played on: {new Date(game.created_at).toLocaleString()}
                       </p>
                       <p className="font-mono text-xs">
@@ -123,10 +123,13 @@ export default async function ProtectedPage() {
                           .join(", ")}
                         )
                       </p>
+                      <p className="font-mono text-xs">
+                        {correct} questions answered
+                      </p>
                     </div>
 
                     <div className="col-span-2 grid grid-cols-4 divide-x">
-                      <div className="px-2 flex flex-col gap-y-1">
+                      <div className="px-2 flex flex-col gap-y-2">
                         <p className="text-xs text-zinc-500 font-mono">
                           Accuracy
                         </p>
@@ -134,7 +137,7 @@ export default async function ProtectedPage() {
                           {times.length === 0 ? "-" : `${accuracy.toFixed(1)}%`}
                         </p>
                       </div>
-                      <div className="px-2 flex flex-col gap-y-1">
+                      <div className="px-2 flex flex-col gap-y-2">
                         <p className="text-xs text-zinc-500 font-mono">
                           Est time/question
                         </p>
@@ -144,7 +147,7 @@ export default async function ProtectedPage() {
                             : `${(averageTime / 1000).toFixed(2)}s`}
                         </p>
                       </div>
-                      <div className="px-2 flex flex-col gap-y-1">
+                      <div className="px-2 flex flex-col gap-y-2">
                         <p className="text-xs text-zinc-500 font-mono">
                           Total Mistakes
                         </p>
@@ -152,7 +155,7 @@ export default async function ProtectedPage() {
                           {game.wrong.toLocaleString()}
                         </p>
                       </div>
-                      <div className="px-2 flex flex-col gap-y-1">
+                      <div className="px-2 flex flex-col gap-y-2">
                         <p className="text-xs text-zinc-500 font-mono">
                           Most mistakes in
                         </p>
