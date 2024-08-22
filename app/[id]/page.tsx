@@ -1,11 +1,11 @@
+import AuthButton from "@/components/AuthButton";
+import DeployButton from "@/components/DeployButton";
 import Footer from "@/components/Footer";
+import GroupGame from "@/components/group-game/GroupGame";
 import SettingsBar from "@/components/SettingsBar";
-import SoloGame from "@/components/solo-game/SoloGame";
 import { createClient } from "@/utils/supabase/server";
-import AuthButton from "../components/AuthButton";
-import DeployButton from "../components/DeployButton";
 
-export default async function Index() {
+export default function Room() {
   const canInitSupabaseClient = () => {
     try {
       createClient();
@@ -28,7 +28,7 @@ export default async function Index() {
 
       <div className="relative w-[600px] flex-1 flex flex-col gap-20 max-w-4xl px-3">
         <SettingsBar />
-        <SoloGame />
+        <GroupGame />
       </div>
 
       <Footer />
