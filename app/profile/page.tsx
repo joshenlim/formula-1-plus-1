@@ -1,6 +1,6 @@
 import AuthButton from "@/components/AuthButton";
-import DeployButton from "@/components/DeployButton";
 import Footer from "@/components/Footer";
+import Profile from "@/components/Profile";
 import { Separator } from "@/components/ui/separator";
 import { cn, getOpSymbol } from "@/lib/utils";
 import { createClient } from "@/utils/supabase/server";
@@ -34,7 +34,6 @@ export default async function ProtectedPage() {
         <nav className="w-full flex justify-center border-b border-b-foreground/10 h-14">
           <div className="w-full max-w-4xl flex justify-between items-center p-3 text-sm">
             <Link href="/">Formula 1+1 🏎️ 🧮</Link>
-            <DeployButton />
             <AuthButton />
           </div>
         </nav>
@@ -42,30 +41,10 @@ export default async function ProtectedPage() {
 
       <div className="flex-1 flex flex-col gap-20 max-w-5xl px-3">
         <main className="flex-1 flex flex-col gap-y-6">
-          <div className="bg-zinc-900 grid grid-cols-3 divide-x rounded-lg">
-            <div className="flex items-center gap-x-4 px-4 py-4">
-              <div className="min-w-10 min-h-10 rounded-full bg-zinc-800 border flex items-center justify-center uppercase text-xl">
-                {user.email?.[0]}
-              </div>
-              <div className="flex flex-col gap-y-1">
-                <p className="truncate">{user.email}</p>
-                <p className="text-xs text-zinc-500 font-mono">
-                  Joined: {new Date(user.created_at).toLocaleString()}
-                </p>
-              </div>
-            </div>
-
-            <div className="px-4 py-4 flex flex-col gap-y-0.5">
-              <p className="text-zinc-500 text-xs font-mono">Games played</p>
-              <p className="text-xl">{sortedGames.length.toLocaleString()}</p>
-            </div>
-            <div className="px-4 py-4 flex flex-col gap-y-0.5">
-              <p className="text-zinc-500 text-xs font-mono">
-                Questions answered
-              </p>
-              <p className="text-xl">{totalQuestions.toLocaleString()}</p>
-            </div>
-          </div>
+          <Profile
+            numSortedGames={sortedGames.length}
+            numQuestionsAnswered={totalQuestions}
+          />
 
           <Separator />
 

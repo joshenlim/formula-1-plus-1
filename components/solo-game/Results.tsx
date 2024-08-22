@@ -1,4 +1,5 @@
 import { useUser } from "@/lib/hooks";
+import { useStoreSnapshot } from "@/lib/store";
 import { GameResults } from "@/lib/types";
 import { cn, getOpSymbol } from "@/lib/utils";
 import { Tooltip } from "@radix-ui/react-tooltip";
@@ -18,6 +19,7 @@ export interface ResultsProps {
 
 export default function Results({ results }: ResultsProps) {
   const user = useUser();
+  const store = useStoreSnapshot();
   const { correct, wrong, times, mistakes } = results;
 
   const accuracy = wrong === 0 ? 100 : (correct / (correct + wrong)) * 100;
@@ -79,7 +81,11 @@ export default function Results({ results }: ResultsProps) {
         </div>
       )}
 
-      <div className="w-full flex flex-col items-center gap-y-3">
+      <div className="w-full flex flex-col items-center gap-y-2">
+        <p className="text-xs font-mono text-zinc-500">
+          {store.digits} digits • {store.operators.length} operators (
+          {store.operators.map((op: string) => getOpSymbol(op)).join(", ")})
+        </p>
         <div className="w-full grid grid-cols-4 divide-x bg-zinc-900 rounded-lg py-4 shadow-lg">
           <div className="flex flex-col items-center justify-center gap-y-2">
             <p className="text-xs text-zinc-500">Accuracy</p>

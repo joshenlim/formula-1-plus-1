@@ -3,6 +3,14 @@ import { headers } from "next/headers";
 import { createClient } from "@/utils/supabase/server";
 import { redirect } from "next/navigation";
 import { SubmitButton } from "./submit-button";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { AlertCircle } from "lucide-react";
+
+const DESCRIPTIONS = {
+  "Could not authenticate user": "Your email or password is incorrect",
+  "Check email to continue sign in process":
+    "Your Formula 1+1 journey begins soon!",
+};
 
 export default function Login({
   searchParams,
@@ -53,6 +61,30 @@ export default function Login({
 
   return (
     <div className="flex-1 flex flex-col w-full px-8 sm:max-w-md justify-center gap-2">
+      <div
+        className="absolute top-0 -left-[3rem] flex items-center gap-x-20 pointer-events-none text-[10rem] -rotate-[15deg] text-zinc-900"
+        style={{ zIndex: -1 }}
+      >
+        {new Array(10).fill(0).map((_, idx: number) => (
+          <code key={`bg-no-1-${idx}`}>{idx}</code>
+        ))}
+      </div>
+      <div
+        className="absolute top-[20%] -left-[3rem] flex items-center gap-x-20 pointer-events-none opacity-10 text-[10rem] -rotate-[15deg]"
+        style={{ zIndex: -1 }}
+      >
+        {new Array(10).fill(0).map((_, idx: number) => (
+          <span key={`bg-car-${idx}`}>🏎️</span>
+        ))}
+      </div>
+      <div
+        className="absolute top-[70%] 2xl:top-[65%] -left-[3rem] 2xl:left-[17rem] flex items-center gap-x-20 pointer-events-none text-[10rem] -rotate-[15deg] text-zinc-900"
+        style={{ zIndex: -1 }}
+      >
+        {new Array(10).fill(0).map((_, idx: number) => (
+          <code key={`bg-no-2-${idx}`}>{idx}</code>
+        ))}
+      </div>
       <Link
         href="/"
         className="absolute left-8 top-8 py-2 px-4 rounded-md no-underline text-foreground bg-btn-background hover:bg-btn-background-hover flex items-center group text-sm"
@@ -74,7 +106,7 @@ export default function Login({
         Back
       </Link>
 
-      <form className="flex-1 flex flex-col w-full justify-center gap-2 text-foreground">
+      <form className="flex-1 flex flex-col w-full justify-center gap-2 text-foreground bg-blur">
         <label className="text-md" htmlFor="email">
           Email
         </label>
@@ -109,9 +141,13 @@ export default function Login({
           Sign Up
         </SubmitButton>
         {searchParams?.message && (
-          <p className="mt-4 p-4 bg-foreground/10 text-foreground text-center">
-            {searchParams.message}
-          </p>
+          <Alert className="bg-foreground/10">
+            <AlertCircle className="h-4 w-4" />
+            <AlertTitle>{searchParams.message}</AlertTitle>
+            <AlertDescription className="text-zinc-400">
+              {(DESCRIPTIONS as any)[searchParams.message]}
+            </AlertDescription>
+          </Alert>
         )}
       </form>
     </div>

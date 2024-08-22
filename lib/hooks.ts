@@ -7,6 +7,14 @@ import { useStoreSnapshot } from "./store";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 
+export const usePrevious = <T>(value: T): T | undefined => {
+  const ref = useRef<T>();
+  useEffect(() => {
+    ref.current = value;
+  });
+  return ref.current;
+};
+
 export const useTimer = (initialState = 0) => {
   const countRef = useRef<any>(null);
   const [elapsedTime, setElapsedTime] = useState(initialState);
@@ -61,14 +69,14 @@ export const useUserProfile = () => {
   const user = useUser()
   const supabase = createClient();
 
-  const { data, isLoading, isSuccess } = useQuery({
+  const { data, isLoading, isSuccess, refetch } = useQuery({
     queryKey: ["profile", user?.id].filter(Boolean),
     queryFn: () => supabase.from('profiles').select('*').eq('id', user.id).single(),
     enabled: user !== null
   })
   const profile = (data as any)?.data
 
-  return { profile, isLoading, isSuccess }
+  return { profile, isLoading, isSuccess, refetch }
 }
 
 export const useRoomInformation = (id: string) => {
@@ -118,5 +126,5 @@ export const useRoomInformation = (id: string) => {
     }
   }, [isSuccess])
 
-  return { room: roomInformation, players, isRoomOwner, isReady, isEveryoneReady, isLoading, refetch }
+  return { room: roomInformation, players, isRoomOwner, isReady, isEveryoneReady, isLoading, isSuccess, refetch }
 }

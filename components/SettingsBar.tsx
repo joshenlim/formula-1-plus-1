@@ -3,10 +3,21 @@
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
+  Dialog,
+  DialogClose,
+  DialogContent,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
 } from "@/components/ui/dropdown-menu";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import {
   Tooltip,
@@ -17,10 +28,12 @@ import { useRoomInformation, useUser } from "@/lib/hooks";
 import { Operator, useStoreSnapshot } from "@/lib/store";
 import { cn, uuidv4 } from "@/lib/utils";
 import { createClient } from "@/utils/supabase/client";
+import { DialogDescription } from "@radix-ui/react-dialog";
 import { DropdownMenuTrigger } from "@radix-ui/react-dropdown-menu";
 import { ChevronDown, Loader2 } from "lucide-react";
 import { useParams, useRouter } from "next/navigation";
 import { useState } from "react";
+import { toast } from "sonner";
 
 const digits = [
   { symbol: "1", key: "1 digit", value: 1 },
@@ -42,6 +55,7 @@ export default function SettingsBar() {
   const store = useStoreSnapshot();
 
   const { id } = useParams();
+  const [roomId, setRoomId] = useState("");
   const [creating, setCreating] = useState(false);
 
   const { room, players, isRoomOwner, isLoading } = useRoomInformation(
@@ -78,8 +92,25 @@ export default function SettingsBar() {
     }
   };
 
-  const onJoinRoom = (id?: string) => {
-    console.log("To implement");
+  const onJoinRoom = async (id?: string) => {
+    if (id === undefined) {
+      const { data } = await supabase.from("rooms").select("id").limit(10);
+      if (data) {
+        const randomRoom = data[Math.floor(Math.random() * data.length)];
+        if (randomRoom) router.push(`/${randomRoom.id}`);
+      }
+    } else {
+      const { data } = await supabase
+        .from("rooms")
+        .select("id")
+        .eq("id", id)
+        .single();
+      if (data) {
+        router.push(`/${id}`);
+      } else {
+        toast.error("The room does not exist");
+      }
+    }
   };
 
   const onCreateRoom = async () => {
@@ -108,18 +139,6 @@ export default function SettingsBar() {
   const onLeaveRoom = async () => {
     if (user === undefined || id === undefined) return;
 
-    // Make someone else the room owner (might make sense for this to be a DB trigger instead)
-    if (players.length > 1 && isRoomOwner) {
-      const otherPlayers = players.filter(
-        (player: any) => player.player_id !== user.id
-      );
-      await supabase
-        .from("room_players")
-        .update({ is_owner: true })
-        .eq("room_id", id)
-        .eq("player_id", otherPlayers[0].player_id);
-    }
-
     await supabase
       .from("room_players")
       .delete()
@@ -127,6 +146,14 @@ export default function SettingsBar() {
       .eq("player_id", user.id);
 
     router.push("/");
+  };
+
+  const onKickPlayer = async (player: any) => {
+    await supabase
+      .from("room_players")
+      .delete()
+      .eq("room_id", id)
+      .eq("player_id", player.player_id);
   };
 
   return (
@@ -218,25 +245,72 @@ export default function SettingsBar() {
                 <Badge variant="outline">Login to play online</Badge>
               ) : id === undefined ? (
                 <>
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <Button
-                        variant="secondary"
-                        className="h-auto py-1 px-2 text-xs gap-x-1"
-                      >
-                        Join
-                        <ChevronDown size={14} />
-                      </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent>
-                      <DropdownMenuItem className="text-xs">
-                        Quick join
-                      </DropdownMenuItem>
-                      <DropdownMenuItem className="text-xs">
-                        Join room
-                      </DropdownMenuItem>
-                    </DropdownMenuContent>
-                  </DropdownMenu>
+                  <Dialog>
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button
+                          variant="secondary"
+                          className="h-auto py-1 px-2 text-xs gap-x-1"
+                        >
+                          Join
+                          <ChevronDown size={14} />
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent>
+                        <DropdownMenuItem
+                          className="text-xs"
+                          onClick={() => onJoinRoom()}
+                        >
+                          Quick join
+                        </DropdownMenuItem>
+                        <DialogTrigger asChild>
+                          <DropdownMenuItem
+                            className="text-xs"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                            }}
+                          >
+                            Join room
+                          </DropdownMenuItem>
+                        </DialogTrigger>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                    <DialogContent>
+                      <DialogHeader>
+                        <DialogTitle>Enter the Room ID</DialogTitle>
+                        <DialogDescription>
+                          Enjoy Formula 1+1 with some friends
+                        </DialogDescription>
+                      </DialogHeader>
+                      <div className="flex items-center space-x-2">
+                        <div className="grid flex-1 gap-2">
+                          <Label htmlFor="room-id" className="sr-only">
+                            Room ID
+                          </Label>
+                          <Input
+                            id="room-id"
+                            value={roomId}
+                            onChange={(e) => setRoomId(e.target.value)}
+                            placeholder="e.g c41a4da1-f70b-468b-b3a0-89f6f3e37ca5"
+                          />
+                        </div>
+                      </div>
+                      <DialogFooter className="sm:justify-end">
+                        <DialogClose asChild>
+                          <Button size="sm" type="button" variant="secondary">
+                            Close
+                          </Button>
+                        </DialogClose>
+                        <Button
+                          size="sm"
+                          type="button"
+                          onClick={() => onJoinRoom(roomId)}
+                        >
+                          Enter room
+                        </Button>
+                      </DialogFooter>
+                    </DialogContent>
+                  </Dialog>
                   <Button
                     disabled={creating}
                     className="h-auto py-1 px-2 text-xs gap-x-2"
@@ -264,10 +338,9 @@ export default function SettingsBar() {
                               )}
                               style={{ transform: `translateX(-${idx * 8}px)` }}
                               onClick={() => {
-                                if (!isOwnself)
-                                  console.log(
-                                    `Kick: ${player.profiles.username}`
-                                  );
+                                if (!isOwnself && isRoomOwner) {
+                                  onKickPlayer(player);
+                                }
                               }}
                             >
                               {player.profiles.username[0]}

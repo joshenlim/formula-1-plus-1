@@ -2,8 +2,8 @@ import Footer from "@/components/Footer";
 import SettingsBar from "@/components/SettingsBar";
 import SoloGame from "@/components/solo-game/SoloGame";
 import { createClient } from "@/utils/supabase/server";
+import Link from "next/link";
 import AuthButton from "../components/AuthButton";
-import DeployButton from "../components/DeployButton";
 
 export default async function Index() {
   const canInitSupabaseClient = () => {
@@ -21,7 +21,7 @@ export default async function Index() {
     <div className="flex-1 w-full flex flex-col gap-20 items-center">
       <nav className="w-full flex justify-center border-b border-b-foreground/10 h-14">
         <div className="w-full max-w-4xl flex justify-between items-center px-3 text-sm">
-          <DeployButton />
+          <Link href="/">Formula 1+1 🏎️ 🧮</Link>
           {isSupabaseConnected && <AuthButton />}
         </div>
       </nav>

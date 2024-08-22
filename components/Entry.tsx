@@ -5,6 +5,7 @@ import { useRoomInformation } from "@/lib/hooks";
 import { useStoreSnapshot } from "@/lib/store";
 import { cn, generateRandomNumber, randomInRange } from "@/lib/utils";
 import confetti from "canvas-confetti";
+import { Check, Clipboard } from "lucide-react";
 import { useParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import { AnimatedCounter } from "react-animated-counter";
@@ -20,6 +21,7 @@ export default function Entry() {
   const { id } = useParams();
   const store = useStoreSnapshot();
 
+  const [copied, setCopied] = useState(false);
   const [counter1, setCounter1] = useState(0);
   const [counter2, setCounter2] = useState(0);
   const [operator, setOperator] = useState(0);
@@ -61,6 +63,12 @@ export default function Entry() {
     };
   }, [store.digits, store.operators.join("-"), store.status]);
 
+  useEffect(() => {
+    if (copied) {
+      setTimeout(() => setCopied(false), 1000);
+    }
+  }, [copied]);
+
   return (
     <div
       className={cn(
@@ -71,7 +79,35 @@ export default function Entry() {
       <p className="flex flex-col gap-y-1 items-center">
         <span>Formula 1+1 🏎️ 🧮</span>
         {id !== undefined && (
-          <span className="text-xs text-zinc-500 font-mono">Room ID: {id}</span>
+          <span className="text-xs text-zinc-500 font-mono">
+            Room ID:{" "}
+            <span
+              className="relative group transition hover:text-zinc-100 cursor-pointer"
+              onClick={() => {
+                const focused = window.document.hasFocus();
+                if (focused) {
+                  window.navigator?.clipboard?.writeText(id as string);
+                } else {
+                  console.warn("Unable to copy to clipboard");
+                }
+                setCopied(true);
+              }}
+            >
+              {id}
+              {copied ? (
+                <Check
+                  size={12}
+                  strokeWidth={3}
+                  className="text-green-500 opacity-0 group-hover:opacity-100 transition absolute top-0 -right-5"
+                />
+              ) : (
+                <Clipboard
+                  size={12}
+                  className="opacity-0 group-hover:opacity-100 transition absolute top-0 -right-5"
+                />
+              )}
+            </span>
+          </span>
         )}
       </p>
       <code
