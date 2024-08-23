@@ -23,3 +23,7 @@ Games can be configured based on the number of digits (1, 10, 100) and what oper
 This project is a contribution to Supabase's [dog-fooding](https://en.wikipedia.org/wiki/Eating_your_own_dog_food) efforts, by using our own technologies from the POV as a developer ourselves. The main outcome wasn't to have a finished product though, but rather to detail a friction log while building the app, so that we can thereafter close those gaps that were identified.
 
 Which also means that this app is by no means _optimized_ or should be used as a best practice reference at all 😬 I just got it to a state of it working properly.
+
+## Running this locally
+
+It should be pretty simple! Pull this repository, start Supabase locally via the [CLI](https://supabase.com/docs/guides/cli/getting-started) with `supabase start`, and set up the database with `supabase db reset`. Create a `.env.local` based off from `.env.example`, and get the necessary values from `supabase status`. Then do the usual `npm install` within this repository, and start the app with `npm run dev` - you should be good to go!
