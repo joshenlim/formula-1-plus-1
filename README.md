@@ -4,7 +4,8 @@
 </a>
 
 <p align="center">
-  Made with the [Next.js and Supabase Starter Kit](https://github.com/vercel/next.js/tree/canary/examples/with-supabase)
+  Made with the 
+  <a href="https://github.com/vercel/next.js/tree/canary/examples/with-supabase">Next.js and Supabase Starter Kit </a>
 </p>
 
 ## What is this
