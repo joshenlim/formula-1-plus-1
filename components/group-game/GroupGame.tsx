@@ -31,7 +31,7 @@ export default function GroupGame({ user }: GroupGameProps) {
   const [results, setResults] = useState<GameResults>();
   const [view, setView] = useState<"entry" | "game" | "results">("entry");
 
-  // Only for fastest first game mode
+  // For fastest first game mode
   const [playerPositions, setPlayerPositions] = useState<{
     [key: string]: number;
   }>({});
@@ -145,15 +145,22 @@ export default function GroupGame({ user }: GroupGameProps) {
           type: "broadcast",
           event: BROADCAST_EVENTS.CORRECT_ANSWER,
           payload: {
+            id: profile.id,
             user: profile.username,
           },
         });
+        const updatedPlayerPositions = {
+          ...playerPositions,
+          [profile.id]: playerPositions[profile.id] + 1,
+        };
+        setPlayerPositions(updatedPlayerPositions);
         setQuestionIdx((prev) => prev + 1);
       } else {
         roomChannel.send({
           type: "broadcast",
           event: BROADCAST_EVENTS.WRONG_ANSWER,
           payload: {
+            id: profile.id,
             user: profile.username,
           },
         });
@@ -185,7 +192,7 @@ export default function GroupGame({ user }: GroupGameProps) {
   };
 
   useEffect(() => {
-    if (store.status === "start" && store.mode === "fastest-first") {
+    if (store.status === "start") {
       const initialPlayerPositions = players.reduce((a: any, b: any) => {
         return { ...a, [b.player_id]: 0 };
       }, {});
@@ -284,6 +291,7 @@ export default function GroupGame({ user }: GroupGameProps) {
               origin: { y: 0.95 },
             });
             setQuestionIdx((prev) => prev + 1);
+            setIncomingUpdate(payload);
           }
         )
         .on(
@@ -388,13 +396,21 @@ export default function GroupGame({ user }: GroupGameProps) {
   // [Joshen] This isn't the best way to do it, but just doing like this for now as it works
   useEffect(() => {
     if (incomingUpdate !== undefined) {
-      const updatedPlayerPositions = {
-        ...playerPositions,
-        [incomingUpdate.id]: incomingUpdate.questionIdx,
-      };
-      setPlayerPositions(updatedPlayerPositions);
+      if (store.mode === "fastest-first") {
+        const updatedPlayerPositions = {
+          ...playerPositions,
+          [incomingUpdate.id]: incomingUpdate.questionIdx,
+        };
+        setPlayerPositions(updatedPlayerPositions);
+      } else {
+        const updatedPlayerPositions = {
+          ...playerPositions,
+          [incomingUpdate.id]: playerPositions[incomingUpdate.id] + 1,
+        };
+        setPlayerPositions(updatedPlayerPositions);
+      }
     }
-  }, [incomingUpdate]);
+  }, [store.mode, incomingUpdate]);
 
   return (
     <main className="flex-1 flex flex-col gap-y-10 items-center justify-center">

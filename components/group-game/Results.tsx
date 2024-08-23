@@ -42,11 +42,13 @@ export default function Results({ results, playerPositions }: ResultsProps) {
 
   const winners = Object.entries(playerPositions)
     .sort((a, b) => b[1] - a[1])
-    .map(
-      (x) =>
-        players.find((player: any) => player.player_id === x[0]).profiles
-          .username
-    );
+    .map((x) => {
+      const player = players.find((player: any) => player.player_id === x[0]);
+      return {
+        name: player.profiles.username,
+        points: playerPositions[player.player_id],
+      };
+    });
 
   return (
     <div className="w-full flex-1 flex flex-col items-center justify-between gap-y-8">
@@ -98,61 +100,72 @@ export default function Results({ results, playerPositions }: ResultsProps) {
         </div>
       )}
 
-      {store.mode === "fastest-first" && (
-        <>
-          {winners.length === 2 ? (
-            <div className="grid grid-cols-2 items-end gap-x-4">
-              <div className="flex flex-col items-center">
-                <p className="relative text-6xl text-yellow-500">
-                  <span>1</span>
-                  <span className="text-xs text-yellow-500 absolute top-1 -right-3">
-                    st
-                  </span>
-                </p>
-                <p className="text-sm">{winners[0]}</p>
-              </div>
-              <div className="flex flex-col items-center -translate-y-[1px]">
-                <p className="text-5xl text-gray-400 relative">
-                  <span>2</span>
-                  <span className="text-xs text-gray-400 absolute top-0 -right-4">
-                    nd
-                  </span>
-                </p>
-                <p className="text-xs">{winners[1]}</p>
-              </div>
-            </div>
-          ) : (
-            <div className="grid grid-cols-3 items-end gap-x-4">
-              <div className="flex flex-col items-center -translate-y-[1px]">
-                <p className="text-5xl text-gray-400 relative">
-                  <span>2</span>
-                  <span className="text-xs text-gray-400 absolute top-0 -right-4">
-                    nd
-                  </span>
-                </p>
-                <p className="text-xs">{winners[1]}</p>
-              </div>
-              <div className="flex flex-col items-center">
-                <p className="relative text-6xl text-yellow-500">
-                  <span>1</span>
-                  <span className="text-xs text-yellow-500 absolute top-1 -right-3">
-                    st
-                  </span>
-                </p>
-                <p className="text-sm">{winners[0]}</p>
-              </div>
-              <div className="flex flex-col items-center -translate-y-[1px]">
-                <p className="relative text-4xl text-stone-700">
-                  <span>3</span>
-                  <span className="text-xs text-stone-700 absolute top-0 -right-3">
-                    rd
-                  </span>
-                </p>
-                <p className="text-xs">{winners[2]}</p>
-              </div>
-            </div>
-          )}
-        </>
+      {winners.length === 2 ? (
+        <div className="grid grid-cols-2 items-end gap-x-4">
+          <div className="flex flex-col items-center">
+            <p className="relative text-6xl text-yellow-500">
+              <span>1</span>
+              <span className="text-xs text-yellow-500 absolute top-1 -right-3">
+                st
+              </span>
+            </p>
+            <p className="text-sm">{winners[0].name}</p>
+            <p className="text-xs font-mono text-zinc-500">
+              {winners[0].points} questions
+            </p>
+          </div>
+          <div className="flex flex-col items-center -translate-y-[1px]">
+            <p className="text-5xl text-gray-400 relative">
+              <span>2</span>
+              <span className="text-xs text-gray-400 absolute top-0 -right-4">
+                nd
+              </span>
+            </p>
+            <p className="text-xs">{winners[1].name}</p>
+            <p className="text-xs font-mono text-zinc-500">
+              {winners[1].points} questions
+            </p>
+          </div>
+        </div>
+      ) : (
+        <div className="grid grid-cols-3 items-end gap-x-4">
+          <div className="flex flex-col items-center -translate-y-[1px]">
+            <p className="text-5xl text-gray-400 relative">
+              <span>2</span>
+              <span className="text-xs text-gray-400 absolute top-0 -right-4">
+                nd
+              </span>
+            </p>
+            <p className="text-xs">{winners[1].name}</p>
+            <p className="text-xs font-mono text-zinc-500">
+              {winners[1].points} questions
+            </p>
+          </div>
+          <div className="flex flex-col items-center">
+            <p className="relative text-6xl text-yellow-500">
+              <span>1</span>
+              <span className="text-xs text-yellow-500 absolute top-1 -right-3">
+                st
+              </span>
+            </p>
+            <p className="text-sm">{winners[0].name}</p>
+            <p className="text-xs font-mono text-zinc-500">
+              {winners[0].points} questions
+            </p>
+          </div>
+          <div className="flex flex-col items-center -translate-y-[1px]">
+            <p className="relative text-4xl text-stone-700">
+              <span>3</span>
+              <span className="text-xs text-stone-700 absolute top-0 -right-3">
+                rd
+              </span>
+            </p>
+            <p className="text-xs">{winners[2].name}</p>
+            <p className="text-xs font-mono text-zinc-500">
+              {winners[2].points} questions
+            </p>
+          </div>
+        </div>
       )}
 
       <div className="w-full flex flex-col items-center gap-y-3">
