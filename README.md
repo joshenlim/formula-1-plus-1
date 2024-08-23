@@ -1,10 +1,10 @@
-<a href="https://https://formula-1-plus-1.vercel.app//">
-  <img alt="Next.js and Supabase Starter Kit - the fastest way to build apps with Next.js and Supabase" src="https://https://formula-1-plus-1.vercel.app/.vercel.app/opengraph-image.png">
+<a href="https://formula-1-plus-1.vercel.app//">
+  <img alt="Next.js and Supabase Starter Kit - the fastest way to build apps with Next.js and Supabase" src="https://formula-1-plus-1.vercel.app/opengraph-image.png">
   <h1 align="center">Formula 1+1 🏎️ 🧮</h1>
 </a>
 
 <p align="center">
-  Made with the Next.js and Supabase Starter Kit
+  Made with the [Next.js and Supabase Starter Kit](https://github.com/vercel/next.js/tree/canary/examples/with-supabase)
 </p>
 
 ## What is this
