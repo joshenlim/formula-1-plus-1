@@ -218,7 +218,7 @@ export default function SettingsBar() {
               {id !== undefined && (
                 <ToggleGroup
                   type="single"
-                  disabled={!isRoomOwner}
+                  disabled={id !== undefined && !isRoomOwner}
                   className="flex items-center justify-center gap-x-4 col-span-2"
                   value={store.mode}
                   onValueChange={onUpdateMode}
@@ -254,7 +254,7 @@ export default function SettingsBar() {
               )}
               <ToggleGroup
                 type="single"
-                disabled={!isRoomOwner}
+                disabled={id !== undefined && !isRoomOwner}
                 className={cn(
                   "flex items-center justify-center gap-x-4",
                   id !== undefined ? "col-span-3" : ""
@@ -292,7 +292,7 @@ export default function SettingsBar() {
               </ToggleGroup>
               <ToggleGroup
                 type="multiple"
-                disabled={!isRoomOwner}
+                disabled={id !== undefined && !isRoomOwner}
                 className={cn(
                   "flex items-center justify-center gap-x-3",
                   id !== undefined ? "col-span-3" : ""
