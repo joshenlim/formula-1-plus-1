@@ -5,6 +5,7 @@ import { cn } from "@/lib/utils";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import Providers from "./providers";
 import { Toaster } from "@/components/ui/sonner";
+import RouteChangeHandler from "@/components/RouteChangeHandler";
 
 const defaultUrl = process.env.VERCEL_URL
   ? `https://${process.env.VERCEL_URL}`
@@ -41,6 +42,7 @@ export default function RootLayout({
             <Toaster position="bottom-center" />
           </TooltipProvider>
         </Providers>
+        <RouteChangeHandler />
       </body>
     </html>
   );

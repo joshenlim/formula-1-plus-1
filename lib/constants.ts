@@ -8,4 +8,5 @@ export const BROADCAST_EVENTS = {
   WRONG_ANSWER: 'wrong-answer',
   RESET_GAME: 'reset-game',
   NEXT_QUESTION: 'next-question',
+  KICK_PLAYER: 'kick-player',
 }

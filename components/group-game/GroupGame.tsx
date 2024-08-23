@@ -217,11 +217,6 @@ export default function GroupGame({ user }: GroupGameProps) {
           { event: "*", schema: "public", table: "room_players" },
           (payload) => {
             if (
-              payload.eventType === "DELETE" &&
-              payload.old.player_id === user.id
-            ) {
-              router.push("/");
-            } else if (
               payload.eventType === "UPDATE" &&
               payload.new.player_id === user.id
             ) {
@@ -267,6 +262,16 @@ export default function GroupGame({ user }: GroupGameProps) {
               });
             }
             refetch();
+          }
+        )
+        .on(
+          "broadcast",
+          { event: BROADCAST_EVENTS.KICK_PLAYER },
+          ({ payload }) => {
+            if (payload.id === user.id) {
+              toast.info("You have been kicked by the room owner 😬");
+              router.push("/");
+            }
           }
         )
         .on(

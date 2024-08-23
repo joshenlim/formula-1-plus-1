@@ -24,15 +24,17 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import { BROADCAST_EVENTS } from "@/lib/constants";
 import { useRoomInformation, useUser } from "@/lib/hooks";
 import { Operator, useStoreSnapshot } from "@/lib/store";
 import { cn, uuidv4 } from "@/lib/utils";
 import { createClient } from "@/utils/supabase/client";
 import { DialogDescription } from "@radix-ui/react-dialog";
 import { DropdownMenuTrigger } from "@radix-ui/react-dropdown-menu";
+import { RealtimeChannel } from "@supabase/supabase-js";
 import { ChevronDown, Loader2 } from "lucide-react";
 import { useParams, useRouter } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { toast } from "sonner";
 
 const modes = [
@@ -62,6 +64,8 @@ export default function SettingsBar() {
   const { id } = useParams();
   const [roomId, setRoomId] = useState("");
   const [creating, setCreating] = useState(false);
+
+  const [roomChannel, setRoomChannel] = useState<RealtimeChannel | null>(null);
 
   const { room, players, isRoomOwner, isLoading } = useRoomInformation(
     id as string
@@ -169,7 +173,23 @@ export default function SettingsBar() {
       .delete()
       .eq("room_id", id)
       .eq("player_id", player.player_id);
+    if (roomChannel) {
+      roomChannel.send({
+        type: "broadcast",
+        event: BROADCAST_EVENTS.KICK_PLAYER,
+        payload: { id: player.player_id },
+      });
+    }
   };
+
+  useEffect(() => {
+    if (id && user) {
+      const channel = supabase.channel(`room-${id}`, {
+        config: { presence: { key: user.id } },
+      });
+      setRoomChannel(channel);
+    }
+  }, [user, id]);
 
   return (
     <div
