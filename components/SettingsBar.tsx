@@ -105,13 +105,13 @@ export default function SettingsBar() {
 
   const onJoinRoom = async (id?: string) => {
     if (id === undefined) {
-      const { data } = await supabase.from("rooms").select("id").limit(10);
+      const { data } = await supabase.rpc("get_rooms_available_to_join");
       if (data) {
         if (data.length === 0) {
           toast.info("There are no rooms available to join!");
         } else {
           const randomRoom = data[Math.floor(Math.random() * data.length)];
-          if (randomRoom) router.push(`/${randomRoom.id}`);
+          if (randomRoom) router.push(`/${randomRoom.room}`);
         }
       }
     } else {
@@ -463,7 +463,7 @@ export default function SettingsBar() {
                 : "Easy Peasy"}
             </span>
           </p>
-          {!isRoomOwner && (
+          {id !== undefined && !isRoomOwner && (
             <p className="text-center text-xs text-zinc-500">
               Only the room owner can adjust the game settings
             </p>

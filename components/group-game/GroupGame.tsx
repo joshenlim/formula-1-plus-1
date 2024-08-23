@@ -375,9 +375,13 @@ export default function GroupGame({ user }: GroupGameProps) {
   useEffect(() => {
     if (players.length > 0) {
       const addNewPlayer = async () => {
-        await supabase
+        const { error } = await supabase
           .from("room_players")
-          .insert({ room_id: id, player_id: user.id });
+          .upsert({ room_id: id, player_id: user.id });
+        if (error) {
+          toast.error(error.message);
+          router.push("/");
+        }
       };
 
       if (players.length > 0) {
