@@ -198,6 +198,7 @@ export default function SettingsBar() {
               {id !== undefined && (
                 <ToggleGroup
                   type="single"
+                  disabled={!isRoomOwner}
                   className="flex items-center justify-center gap-x-4 col-span-2"
                   value={store.mode}
                   onValueChange={onUpdateMode}
@@ -233,6 +234,7 @@ export default function SettingsBar() {
               )}
               <ToggleGroup
                 type="single"
+                disabled={!isRoomOwner}
                 className={cn(
                   "flex items-center justify-center gap-x-4",
                   id !== undefined ? "col-span-3" : ""
@@ -270,6 +272,7 @@ export default function SettingsBar() {
               </ToggleGroup>
               <ToggleGroup
                 type="multiple"
+                disabled={!isRoomOwner}
                 className={cn(
                   "flex items-center justify-center gap-x-3",
                   id !== undefined ? "col-span-3" : ""
@@ -460,6 +463,11 @@ export default function SettingsBar() {
                 : "Easy Peasy"}
             </span>
           </p>
+          {!isRoomOwner && (
+            <p className="text-center text-xs text-zinc-500">
+              Only the room owner can adjust the game settings
+            </p>
+          )}
         </>
       )}
     </div>

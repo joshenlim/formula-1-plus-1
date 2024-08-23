@@ -1,0 +1,1 @@
+alter table "public"."rooms" add "capacity" int8 not null default 5;
